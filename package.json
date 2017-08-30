@@ -1,5 +1,5 @@
 {
-  "name": "babel-demo-plugin",
+  "name": "babel-statictype-plugin",
   "version": "1.0.0",
   "description": "",
   "main": "index.js",
@@ -15,9 +15,9 @@
   "author": "",
   "license": "ISC",
   "bugs": {
-    "url": "https://github.com/albertzzy/babel-demo-plugin/issues"
+    "url": "https://github.com/albertzzy/babel-statictype-plugin/issues"
   },
-  "homepage": "https://github.com/albertzzy/babel-demo-plugin#readme",
+  "homepage": "https://github.com/albertzzy/babel-statictype-plugin#readme",
   "dependencies": {
     "babel-plugin-root-import": "^5.1.0"
   },
