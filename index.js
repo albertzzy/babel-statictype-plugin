@@ -1,57 +1,112 @@
-// module.exports.exp = 12;
+const REG = /^(Num|Str|Und|Null|Bool|Sym|Obj)_/;
+
+const funcTypeMap = new Map();
 
 
-function printTips(a,b) {
-  tips.forEach((tip, i) => console.log(`Tip ${i}:` + tip));
+const getRealType = (variName) => {
+
+    let val = variName.match(REG)[1];
+
+    switch(val){
+        case 'Num':return 'number';
+        case 'Str':return 'string';
+        case 'Und':return 'undefined';
+        case 'Null':return 'null';
+        case 'Sym':return 'symbol';
+        case 'Obj':return 'object';
+        case 'Bool':return 'boolean';
+        default: return 'any';
+    }
 }
 
-export default printTips;
-module.exports = printTips;
+
+const visitor = {
+    VariableDeclaration(path,state){
+        let declarationsArray = path.node.declarations;
+        let varLen = declarationsArray.length;
+
+        for(let i=0;i<varLen;i++){
+            let vari = declarationsArray[i];
+            let variName = vari.id.name;
+            let realType = getRealType(variName);
+            
+
+            if(vari.init){
+                let val = vari.init.value;
+
+                if( !(typeof val === realType || (val === null && realType === 'null')) ){
+
+                    throw path.buildCodeFrameError("The value you give to the variable is not the right type.");
+
+                }
+            }
+        }
 
 
+    },
 
-/*
-const demoVisitor = {
+    ExpressionStatement(path,state){
+        let expressType = path.node.expression.type;
 
-	Identifier(path){
-		// console.log(path.node)
-	},	
+        if(expressType === 'AssignmentExpression'){
 
-	ExportNamedDeclaration(path,state){
+            let variName = path.node.expression.left.name;
+            let val = path.node.expression.right.value;
 
-		// console.log(path)
-	},
-	FunctionDeclaration(path,state){
+            let realType = getRealType(variName);
 
-		// console.log(path.node.params)
+            if( !(typeof val === realType || (val === null && realType === 'null')) ){
 
-	},
-	ExportDefaultDeclaration(path,state){
-		// console.log(state)
-		// console.log(path.node.declaration.loc.identifierName)
-	}
+                throw path.buildCodeFrameError("The value you give to the variable is not the right type.");
+
+            }
+
+        }else if (expressType === 'CallExpression'){
+
+            let funcName = path.node.expression.callee.name;
+            let paramsType = funcTypeMap.get(funcName);
+            let args = path.node.expression.arguments;
+
+            for(let i=0;i<paramsType.length;i++){
+                let arg = args[i].value;
+                let realType = paramsType[i];
+
+                if( !(typeof arg === realType || (arg === null && realType === 'null')) ){
+
+                    throw path.buildCodeFrameError("The value you give to the variable is not the right type.");
+
+                }
+            }
 
 
+        }
+        
+    },
+
+    FunctionDeclaration(path,state){
+
+        let funcName = path.node.id.name;
+        let params = path.node.params;
+        let paramsType = [];
+
+        for(let i=0;i<params.length;i++){
+            paramsType.push(getRealType(params[i].name));
+        }
+
+        funcTypeMap.set(funcName,[...paramsType]);
+    }    
 
 }
- 
+
 
 
 module.exports = function({types:t}){
-	return {
+    return {
+        'visitor':{
+            Program:function(path,state){
+                path.traverse(visitor,state);
+            }
 
-		visitor:{
-
-			Program(path,state){
-				path.insertBefore(t.expressionStatement(t.stringLiteral('a=1')))
-				// path.traverse(demoVisitor,state)
-
-			}
-
-		}
-
-
-	}
+        }
+    }
 }
-
-*/
